@@ -4,6 +4,9 @@ from __future__ import print_function
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from scipy.spatial import distance
+import matplotlib.pyplot as plt
+import pdb
+import time
 
 
 
@@ -40,8 +43,8 @@ def create_equal_distance():
 
 def create_grid_points():
     points_matrix = []
-    for i in range(0,9):
-        for j in range(0,9):
+    for i in range(0,20):
+        for j in range(0,20):
             points_matrix.append((i, j))
     print(points_matrix)
     print("points matrix just above!\n")
@@ -74,10 +77,36 @@ def return_nodes(manager, routing, solution):
         index = solution.Value(routing.NextVar(index))
         route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
     plan_output += ' {}\n'.format(manager.IndexToNode(index))
+    tsp_nodes.append(manager.IndexToNode(index))
     print(plan_output)
     plan_output += 'Route distance: {}miles\n'.format(route_distance)
-    print(tsp_nodes)
+    #print(tsp_nodes)
     return tsp_nodes
+
+
+def print_grid_to_map(nodes, tsp_path):
+	x_axis = []
+	y_axis = []
+	# convert points to coords
+	for n in nodes:
+		x, y = n
+		x_axis.append(x)
+		y_axis.append(y)
+	plt.plot(x_axis, y_axis, 'ro')
+	plt.show(block=False)
+
+	for n in tsp_path:
+		x, y = nodes[n]
+		x_axis.append(x)
+		y_axis.append(y)
+		print("Node is %s and coords are %s" %(n, nodes[n]))
+	for n in range(0, len(tsp_path)-1):
+		plt.plot([x_axis[tsp_path[n]], x_axis[tsp_path[n+1]]], [y_axis[tsp_path[n]], y_axis[tsp_path[n+1]]])
+		plt.draw()
+		plt.pause(0.2)
+		#plt.show(block=False)
+	#plt.plot(x_axis, y_axis)
+	plt.show()
 
 
 
@@ -133,7 +162,9 @@ def main():
     # Print solution on console.
     if solution:
         print_solution(manager, routing, solution)
-        nodes = return_nodes(manager, routing, solution)
+        tsp_node_path = return_nodes(manager, routing, solution)
+        nodes = create_grid_points()
+        print_grid_to_map(nodes, tsp_node_path)
 
 
 if __name__ == '__main__':
