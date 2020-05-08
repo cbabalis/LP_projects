@@ -14,11 +14,10 @@ def read_city_names(city_names_file):
     return locations
 
 
-def modify_data_for_google_or(city_names, data_dict):
+def modify_data_for_google_or(city_names):
     """ Method which computes the distance of each city with the others
     and creates a dictionary according to the specs of or_tools.
     :param city_names: list of city names
-    :param data_dict: dictionary with data as described in or_tools.
     """
     # create a list for the geolocator objects and a matrix containing
     # all distances between the cities
@@ -62,7 +61,7 @@ def compute_distance(city_a, city_b):
 
 def main():
     city_names = ["Athens", "Thebes", "Lamia", "Volos", "Kozani", "Giannena", "Agrinio", "Korinthos"]
-    distance_matrix = modify_data_for_google_or(city_names, [])
+    distance_matrix = modify_data_for_google_or(city_names)
     print(distance_matrix)
 
 
