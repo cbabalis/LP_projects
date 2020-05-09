@@ -1,4 +1,7 @@
-"""Simple travelling salesman problem between cities."""
+"""Simple travelling salesman problem between cities.
+The particular module implements a grid and runs the TSP
+in the grid.
+"""
 
 from __future__ import print_function
 from ortools.constraint_solver import routing_enums_pb2
@@ -43,8 +46,8 @@ def create_equal_distance():
 
 def create_grid_points():
     points_matrix = []
-    for i in range(0,20):
-        for j in range(0,20):
+    for i in range(0,10):
+        for j in range(0,10):
             points_matrix.append((i, j))
     print(points_matrix)
     print("points matrix just above!\n")
