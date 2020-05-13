@@ -1,5 +1,4 @@
-
-"""Simple travelling salesman problem between cities."""
+"""Vehicles Routing Problem (VRP)."""
 
 from __future__ import print_function
 from ortools.constraint_solver import routing_enums_pb2
@@ -16,38 +15,34 @@ import csv
 def create_data_model(city_names):
     data = {}
     data['distance_matrix'] = city_ops.modify_data_for_google_or(city_names)
-    data['num_vehicles'] = 1
+    data['num_vehicles'] = 3
     data['depot'] = 0
     return data
 
 
-def print_solution(manager, routing, solution, city_names):
+def print_solution(data, manager, routing, solution, city_names):
     """Prints solution on console."""
-    path_list = []
-    print('Objective: {} miles'.format(solution.ObjectiveValue()))
-    index = routing.Start(0)
-    plan_output = 'Route for vehicle 0:\n'
-    route_distance = 0
-    city_names_dict = create_city_names_dict(city_names)
-    while not routing.IsEnd(index):
-        plan_output += ' {} ->'.format(city_names_dict[manager.IndexToNode(index)])
+    max_route_distance = 0
+    for vehicle_id in range(data['num_vehicles']):
+        path_list = []
+        index = routing.Start(vehicle_id)
+        plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
+        route_distance = 0
+        city_names_dict = create_city_names_dict(city_names)
+        while not routing.IsEnd(index):
+            plan_output += ' {} -> '.format(city_names_dict[manager.IndexToNode(index)])
+            path_list.append(city_names_dict[manager.IndexToNode(index)])
+            previous_index = index
+            index = solution.Value(routing.NextVar(index))
+            route_distance += routing.GetArcCostForVehicle(
+                previous_index, index, vehicle_id)
+        plan_output += ' {}\n'.format(city_names_dict[manager.IndexToNode(index)])
+        plan_output += 'Distance of the route: {}m\n'.format(route_distance)
+        print(plan_output)
+        max_route_distance = max(route_distance, max_route_distance)
         path_list.append(city_names_dict[manager.IndexToNode(index)])
-        previous_index = index
-        index = solution.Value(routing.NextVar(index))
-        route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
-    plan_output += ' {}\n'.format(city_names_dict[manager.IndexToNode(index)])
-    print(plan_output)
-    plan_output += 'Route distance: {}miles\n'.format(route_distance)
-    path_list.append(city_names_dict[manager.IndexToNode(index)])
-    print(path_list)
-    write_results_to_csv(path_list)
+    print('Maximum of the route distances: {}m'.format(max_route_distance))
 
-
-def write_results_to_csv(path_list):
-    path_list = [elem.strip('\n') for elem in path_list]
-    with open('csv_results.csv', 'w') as myfile:
-        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-        wr.writerow(path_list)
 
 
 def create_city_names_dict(city_names):
@@ -58,6 +53,7 @@ def create_city_names_dict(city_names):
         i += 1
     return di
 
+
 def read_cities_from_file(a_file):
     cities_list = []
     with open(a_file, 'r') as f:
@@ -67,8 +63,10 @@ def read_cities_from_file(a_file):
     return cities_list
 
 
+
+
 def main():
-    """Entry point of the program."""
+    """Solve the CVRP problem."""
     # Instantiate the data problem.
     city_names = read_cities_from_file(sys.argv[1])
     data = create_data_model(city_names)
@@ -81,6 +79,7 @@ def main():
     routing = pywrapcp.RoutingModel(manager)
 
 
+    # Create and register a transit callback.
     def distance_callback(from_index, to_index):
         """Returns the distance between the two nodes."""
         # Convert from routing variable Index to distance matrix NodeIndex.
@@ -93,6 +92,17 @@ def main():
     # Define cost of each arc.
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
+    # Add Distance constraint.
+    dimension_name = 'Distance'
+    routing.AddDimension(
+        transit_callback_index,
+        0,  # no slack
+        30000,  # vehicle maximum travel distance
+        True,  # start cumul to zero
+        dimension_name)
+    distance_dimension = routing.GetDimensionOrDie(dimension_name)
+    distance_dimension.SetGlobalSpanCostCoefficient(100)
+
     # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
@@ -103,7 +113,7 @@ def main():
 
     # Print solution on console.
     if solution:
-        print_solution(manager, routing, solution, city_names)
+        print_solution(data, manager, routing, solution, city_names)
 
 
 if __name__ == '__main__':
