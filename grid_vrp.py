@@ -25,8 +25,8 @@ def create_equal_distance():
 
 def create_grid_points():
     points_matrix = []
-    for i in range(0,12):
-        for j in range(0,12):
+    for i in range(0,8):
+        for j in range(0, 8):
             points_matrix.append((i, j))
     print("points matrix just above!\n")
     return points_matrix
@@ -96,6 +96,8 @@ def print_grid_to_map(nodes, tsp_path, color):
 		x_axis.append(x)
 		y_axis.append(y)
 		#print("Node is %s and coords are %s" %(n, nodes[n]))
+	print(len(x_axis))
+	print(len(y_axis))
 	for n in range(0, len(tsp_path)-1):
 		plt.plot([x_axis[tsp_path[n]], x_axis[tsp_path[n+1]]], [y_axis[tsp_path[n]], y_axis[tsp_path[n+1]]], color)
 		plt.draw()
