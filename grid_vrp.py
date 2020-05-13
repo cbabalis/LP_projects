@@ -7,7 +7,7 @@ from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import pdb
 import time
-
+import json
 
 
 def create_equal_distance():
@@ -16,15 +16,18 @@ def create_equal_distance():
     data['distance_matrix'] = calculate_grid_distances(points_matrix)
     data['num_vehicles'] = 4
     data['depot'] = 0
+    with open('data.json', 'w') as outfile:
+        json.dump(data, outfile)
+    with open('data.json') as json_file:
+        data = json.load(json_file)
     return data
 
 
 def create_grid_points():
     points_matrix = []
-    for i in range(0,10):
-        for j in range(0,10):
+    for i in range(0,12):
+        for j in range(0,12):
             points_matrix.append((i, j))
-    #print(points_matrix)
     print("points matrix just above!\n")
     return points_matrix
 
