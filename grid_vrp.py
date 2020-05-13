@@ -24,7 +24,7 @@ def create_grid_points():
     for i in range(0,10):
         for j in range(0,10):
             points_matrix.append((i, j))
-    print(points_matrix)
+    #print(points_matrix)
     print("points matrix just above!\n")
     return points_matrix
 
@@ -40,6 +40,63 @@ def calculate_grid_distances(points_matrix):
     #print(distance_matrix)
     #print("distance matrix just above!\n")
     return distance_matrix
+
+
+def get_vrp_nodes_path(data, manager, routing, solution):
+    """ This method gets the paths for all nodes."""
+    all_paths = {}
+    for vehicle_id in range(data['num_vehicles']):
+        all_paths[vehicle_id] = return_nodes(manager, routing, solution, vehicle_id)
+    return all_paths
+
+def return_nodes(manager, routing, solution, vehicle_id):
+    """returns nodes sorted with the travel."""
+    print('Objective: {} miles'.format(solution.ObjectiveValue()))
+    index = routing.Start(vehicle_id)
+    plan_output = 'Route for vehicle 0:\n'
+    vrp_nodes = []
+    route_distance = 0
+    while not routing.IsEnd(index):
+        plan_output += ' {} ->'.format(manager.IndexToNode(index))
+        vrp_nodes.append(manager.IndexToNode(index))
+        previous_index = index
+        index = solution.Value(routing.NextVar(index))
+        route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
+    plan_output += ' {}\n'.format(manager.IndexToNode(index))
+    vrp_nodes.append(manager.IndexToNode(index))
+    print(plan_output)
+    plan_output += 'Route distance: {}miles\n'.format(route_distance)
+    #print(tsp_nodes)
+    return vrp_nodes
+
+
+def print_paths_to_grid(data, nodes, vrp_nodes_path):
+    color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+    for  vehicle_id in range(data['num_vehicles']):
+        color = color_list[vehicle_id % len(color_list)]
+        print_grid_to_map(nodes, vrp_nodes_path[vehicle_id], color)
+    plt.show()
+
+def print_grid_to_map(nodes, tsp_path, color):
+	x_axis = []
+	y_axis = []
+	# convert points to coords
+	for n in nodes:
+		x, y = n
+		x_axis.append(x)
+		y_axis.append(y)
+	plt.plot(x_axis, y_axis, 'ro')
+	plt.show(block=False)
+
+	for n in tsp_path:
+		x, y = nodes[n]
+		x_axis.append(x)
+		y_axis.append(y)
+		#print("Node is %s and coords are %s" %(n, nodes[n]))
+	for n in range(0, len(tsp_path)-1):
+		plt.plot([x_axis[tsp_path[n]], x_axis[tsp_path[n+1]]], [y_axis[tsp_path[n]], y_axis[tsp_path[n+1]]], color)
+		plt.draw()
+		plt.pause(0.2)
 
 
 def print_solution(data, manager, routing, solution):
@@ -60,8 +117,6 @@ def print_solution(data, manager, routing, solution):
         print(plan_output)
         max_route_distance = max(route_distance, max_route_distance)
     print('Maximum of the route distances: {}m'.format(max_route_distance))
-
-
 
 
 def main():
@@ -112,6 +167,9 @@ def main():
     # Print solution on console.
     if solution:
         print_solution(data, manager, routing, solution)
+        vrp_nodes_path = get_vrp_nodes_path(data, manager, routing, solution)
+        nodes = create_grid_points()
+        print_paths_to_grid(data, nodes, vrp_nodes_path)
 
 
 if __name__ == '__main__':
