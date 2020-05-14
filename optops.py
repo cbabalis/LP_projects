@@ -1,4 +1,4 @@
-""" Module which contains operations for optmization problems of
+""" Module which contains operations for optimization problems of
 or tools.
 
 :author: Charalampos Babalis
@@ -11,6 +11,16 @@ from __future__ import print_function
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import json
+import pdb
+
+
+def create_data_model(distance_matrix, num_vehicles):
+    """Stores the data for the problem."""
+    data = {}
+    data['distance_matrix'] = distance_matrix
+    data['num_vehicles'] = num_vehicles
+    data['depot'] = 0
+    return data
 
 
 def read_model_from_file(a_file):
@@ -98,6 +108,43 @@ def create_simple_grid(x_dim, y_dim):
     return points_matrix
 
 
+def write_grid_to_file(points_matrix, output_file):
+    """ Method to write a grid's points to a file.
+    Parameters
+    ---------
+    points_matrix : list
+        a list of tuples (x,y) representing the coordinates of points.
+    output_file : str
+        the filename where the grid points will be written.
+    """
+    with open(output_file, 'w') as outfile:
+        for point in points_matrix:
+            coords = str(point)
+            outfile.write("%s\n" % coords)
+        #outfile.write(','.join('%s %s' % x for x in points_matrix))
+
+
+def read_grid_from_file(input_file):
+    """ Method to read points from a file and build a grid with them.
+    
+    Parameters
+    ----------
+    input_file : str
+        The filepath with the grid points.
+    
+    Returns
+    -------
+    points_matrix : list
+        a list of tuples (x,y) representing the coordinates of points.
+    """
+    points_matrix = []
+    with open(input_file, 'r') as infile:
+        content = infile.read().splitlines()
+        for coord in content:
+            points_matrix.append(eval(coord))
+    return points_matrix
+
+
 def get_all_routes(data, manager, routing, solution):
     """ Method to get the routes of all nodes.
 
@@ -126,10 +173,9 @@ def get_single_route_nodes(manager, routing, solution, vehicle_id):
 
     Parameters
     ----------
-    data : dictionary
-        The model containing the data for the optimization model.
     manager : ortools objects
     routing : ortools routing
+    solution : ortools object representing the found solution.
     vehicle_id : int, the id of the vehicle
 
     Returns
@@ -139,19 +185,14 @@ def get_single_route_nodes(manager, routing, solution, vehicle_id):
     """
     print('Objective: {} miles'.format(solution.ObjectiveValue()))
     index = routing.Start(vehicle_id)
-    plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
     solution_nodes = []
     route_distance = 0
     while not routing.IsEnd(index):
-        plan_output += ' {} ->'.format(manager.IndexToNode(index))
         solution_nodes.append(manager.IndexToNode(index))
         previous_index = index
         index = solution.Value(routing.NextVar(index))
         route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
-    plan_output += ' {}\n'.format(manager.IndexToNode(index))
     solution_nodes.append(manager.IndexToNode(index))
-    print(plan_output)
-    plan_output += 'Route distance: {}miles\n'.format(route_distance)
     return solution_nodes
 
 
