@@ -12,6 +12,7 @@ from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import json
 import pdb
+import os
 
 
 def create_data_model(distance_matrix, num_vehicles):
@@ -217,7 +218,7 @@ def print_grid(nodes, color='ro'):
         x_axis.append(x)
         y_axis.append(y)
     plt.plot(x_axis, y_axis, color)
-    plt.show(block=False)
+    #plt.show(block=False)
     return (x_axis, y_axis)
 
 
@@ -235,20 +236,35 @@ def print_solution_to_grid(nodes, solution_path, axis, color):
                   [y_axis[solution_path[n]],
                   y_axis[solution_path[n+1]]],
                   color)
-        plt.draw()
-        plt.pause(0.1)
+        #plt.draw()
+        #plt.pause(0.01)
 
 
 def print_paths_to_grid(data, nodes, solutions_path):
     """ Method to print the paths to an already printed grid."""
+    axis = print_grid(nodes, 'ro')
     for vehicle_id in range(data['num_vehicles']):
         color = get_plot_color(vehicle_id)
-        axis = print_grid(nodes, color)
-        print_solution_to_grid(nodes, solutions_path, axis, color)
-    plt.show()
+        print_solution_to_grid(nodes, solutions_path[vehicle_id], axis, color)
+    #plt.show(block=False)
 
 
 def get_plot_color(vehicle_id):
     """ Method which returns a plot color."""
     color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
     return color_list[vehicle_id % len(color_list)]
+
+
+def save_fig_to_file(filedir):
+    """ Method to save a matplotlib figure as a file.
+    """
+    # create a file name.
+    filename = filedir + 'figure.png'
+    # check if file already exists and remove it.
+    if os.path.exists(filename):
+        os.remove(filename)
+    plt.savefig(filename)
+    # then clear out everything
+    plt.cla()
+    plt.clf()
+    plt.close()
